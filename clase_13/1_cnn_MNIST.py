@@ -7,8 +7,23 @@ import jax
 import jax.numpy as jnp
 from jax import grad, jit
 
-AQUI = pathlib.Path(__file__).resolve().parent
-DATA = AQUI / "data"
+# el dataset ya esta incluido en data/ (no se descarga nada, no requiere internet);
+# lo buscamos hacia arriba desde donde arranque el kernel, sin asumir ningun path fijo
+# (corriendo como script: __file__; corriendo celda a celda en Jupyter/Hydrogen: cwd)
+def encontrar_data():
+    try:
+        inicio = pathlib.Path(__file__).resolve().parent
+    except NameError:
+        inicio = pathlib.Path.cwd()
+    for base in [inicio, *inicio.parents]:
+        if (base / "data" / "train-images-idx3-ubyte.gz").exists():
+            return base / "data"
+    raise FileNotFoundError(
+        "No encontre la carpeta data/ con el dataset MNIST. "
+        "Corre este script desde la carpeta clase_13 (la que contiene data/)."
+    )
+
+DATA = encontrar_data()
 
 # %% cargar MNIST (archivos idx comprimidos, sin torchvision/tensorflow)
 def leer_idx(nombre):
