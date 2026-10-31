@@ -63,6 +63,7 @@ def forward(ps, x):
     W, b = ps[-1]
     return (h @ W.T + b)[:, 0]          # capa de salida: lineal
 
+
 # %% funcion de costo: MSE
 def loss(ps, x, y):
     return jnp.mean((forward(ps, x) - y) ** 2)
@@ -79,13 +80,14 @@ def entrenar(ps, x, y, pasos, lr):
             curva.append(float(loss(ps, x, y)))
     return ps, curva
 
+
 capas = [1, 16, 16, 1]
 ps0 = init(key, capas)
 
 ax=plt.subplot(111)
 ax.scatter(x_train,y_train,s=2, label="datos")
 ax.plot(x_train, target(x_train),color="red",linewidth=1,label="funcion de verdad")
-ax.plot(x_train, forward(ps0,x_train),color="blue",linewidth=1,label="red sin entrenar")
+ax.scatter(x_train, forward(ps0,x_train),s=2,color="blue",label="red sin entrenar")
 ax.legend()
 
 
@@ -95,11 +97,10 @@ ps_final, curva = entrenar(ps0, x_train, y_train, pasos=3000, lr=0.01)
 # %% grafico: ajuste final + curva de entrenamiento
 fig, axs = plt.subplots(1, 2, figsize=(11, 4))
 axs[0].plot(x_grid, y_grid, color="black", label="polinomio real")
-axs[0].plot(x_grid, forward(ps_final, x_grid), color="tab:red", label="red entrenada")
+axs[0].scatter(x_grid, forward(ps_final, x_grid), s=14, color="blue", label="red entrenada")
 axs[0].scatter(x_train, y_train, color="gray", s=15, alpha=0.6, label="datos (con ruido)")
 axs[0].legend()
 axs[0].set_title("ajuste")
-
 axs[1].plot(curva, color="tab:blue")
 axs[1].set_yscale("log")
 axs[1].set_title("costo (MSE) durante el entrenamiento")
@@ -112,14 +113,12 @@ plt.show()
 
 
 #####  BACK TO QUANTUM
-
-
 # qubit: vector en C^2
 ket0 = np.array([1, 0], dtype=complex)
 ket1 = np.array([0, 1], dtype=complex)
 ket0, ket1
 
-alpha = .1
+alpha = np.sqrt(1/2)
 beta = np.sqrt(1-alpha**2)
 np.array({alpha, beta})
 
@@ -130,6 +129,8 @@ plus = alpha * ket0 + beta * ket1
 
 print(f"|+> = {plus}")
 print(f"norma: {np.linalg.norm(plus):.4f}")
+
+
 
 
 ##### Proyectores  & medidas
@@ -154,15 +155,15 @@ print(f"p(1) = {p1:.4f}")
 
 ### Qué pasa si simulamos muchas medidas ???? ---> SHOTS ---> Frecuencias
 
-shots = 100000
+shots = 1000
 outcomes = np.random.choice([0, 1], size=shots, p=[p0, p1])
+outcomes
 
 print(f"frecuencia 0: {np.mean(outcomes == 0):.3f}")
 print(f"frecuencia 1: {np.mean(outcomes == 1):.3f}")
 
 
 #### y si variamos los valores de alpha ???
-
 alphas = [0, 1/np.sqrt(2), 1]
 shots_list = [10, 100, 1000]
 
@@ -294,9 +295,6 @@ print("estado producto |+>|0> =", np.round(producto, 3))
 bell = (ket00 + ket11) / np.sqrt(2)
 print("estado de Bell (|00>+|11>)/√2 =", np.round(bell, 3))
 
-
-
-
 # deteccion de entrelazamiento via descomposicion de Schmidt
 # reescribimos el estado como matriz 2x2 y miramos su rango
 
@@ -308,8 +306,6 @@ def schmidt_rank(psi):
 
 print(f"rango de Schmidt |+>|0>:          {schmidt_rank(producto)}  → separable")
 print(f"rango de Schmidt estado de Bell:   {schmidt_rank(bell)}  → entrelazado")
-
-
 
 
 
@@ -345,8 +341,6 @@ for name, U in [("H", H), ("RY(π/3)", RY(np.pi/3)), ("RZ(π/4)", RZ(np.pi/4))]:
 
 
 ### Ploteamos la acción de la unitaria sobre la esfera de bloch_vector
-
-
 thetas = np.linspace(0, 2*np.pi, 200)
 
 # trayectoria sobre la esfera de Bloch: RY(θ)|0> → (sin(θ), 0, cos(θ))
@@ -395,7 +389,6 @@ plt.show()
 
 
 #### Qué pasa con la CNOT ???
-
 CNOT = np.array([[1,0,0,0],
                   [0,1,0,0],
                   [0,0,0,1],
@@ -408,7 +401,6 @@ psi_bell = CNOT @ psi_after_H
 
 print("estado luego de aplicar H⊗I:", np.round(psi_after_H, 3))
 print("estado de Bell:  ", np.round(psi_bell, 3))
-print(f"rango de Schmidt estado de Bell: {schmidt_rank(psi_bell)}  → entrelazado")
 
 
 #### Volvemos a los Observables
@@ -422,18 +414,16 @@ print("X hermitica:", is_hermitian(X))
 print("RY(π/3) hermitica:", is_hermitian(RY(np.pi/3)))  # compuerta ≠ observable
 
 
-
-
-
 #### Descomposición esprectral
-
 eigenvalues, eigenvectors = np.linalg.eigh(X)  # calcula los autovalores y autoverctores para la matriz X (intentá hacerlo para una matriz suficientemente grande a ver qué pasa!)
 
 print("autovalores de X:", eigenvalues)
 print("autovectores de X:\n", np.round(eigenvectors, 3))
 
 # reconstruccion desde la descomposicion espectral
-# O = sum_i lambda_i |v_i><v_i|
+# O = sum_i lambda_i |v_i><v_i|     - |-><-|   +     + |+><+|
+
+
 X_rec = sum(lam * np.outer(v, v.conj()) for lam, v in zip(eigenvalues, eigenvectors.T))
 print("\nX reconstruida desde autovalores/autovectores:")
 print(np.round(X_rec, 3))
@@ -462,8 +452,6 @@ print("\nautovalores:", np.round(np.linalg.eigvalsh(H_2q), 3))
 
 
 ### Estimamos valor medio de un observable
-
-
 def expval_exact(psi, O):
     return np.real(psi.conj() @ O @ psi)
 
@@ -480,8 +468,22 @@ psi_test = np.kron(RY(np.pi / 3) @ ket0, RY(np.pi / 5) @ ket0)
 
 print(f"ket0: {ket0}")
 print(f"<H> exacto:    {expval_exact(psi_test, H_2q):.6f}")
-print(f"<H> muestreo:  {expval_sampling(psi_test, H_2q, shots=1000):.6f}")
+print(f"<H> muestreo:  {expval_sampling(psi_test, H_2q, shots=10000):.6f}")
 
+
+
+shots_range = [10, 50, 100, 500, 1000, 5000, 10000]
+exact = expval_exact(psi_test, H_2q)
+estimates = [expval_sampling(psi_test, H_2q, shots=s) for s in shots_range]
+
+plt.figure(figsize=(6, 3))
+plt.semilogx(shots_range, estimates, "o-", label="muestreo")
+plt.axhline(exact, color="tomato", linestyle="--", label="exacto")
+plt.xlabel("shots")
+plt.ylabel("<H>")
+plt.legend()
+plt.tight_layout()
+plt.show()
 
 
 shots_range = [10, 50, 100, 500, 1000, 5000, 10000]
@@ -526,7 +528,6 @@ def grad_fd(params, eps=0.2, shots=None):
     return g
 
 grad_sep = grad_fd
-
 params0 = np.array([.1 , .2 ])
 print(f"gradiente FD exacto:       {grad_fd(params0)}")
 print(f"gradiente FD (512 shots):  {grad_fd(params0, shots=1000)}")
@@ -554,23 +555,21 @@ plt.tight_layout(); plt.show()
 
 
 #### LOOP de entrenamiento!
-
-
 # optimization step CON shots finitos:
 E_ground = np.min(np.linalg.eigvalsh(H_2q))   # referencia exacta (-2)
 
-SHOTS = 1000     # shots por cada evaluacion de costo
+SHOTS = 5000     # shots por cada evaluacion de costo
 EPS   = 0.02     # paso de diferencias finitas
 lr    = 0.05
 
 np.random.seed(0)
-params = np.array([np.pi, 0.])
+params = np.array([np.pi, 0.]) ### np.random.rand(2) ---> Barren Plateaus
 hist_noisy = [cost_sep(params, shots=SHOTS)]   # lo que "ve" el optimizador
 hist_exact = [cost_sep(params)]                # referencia exacta (no disponible en HW real)
 
 for _ in range(100):
     g = grad_fd(params, eps=EPS, shots=SHOTS)  # gradiente ruidoso por diferencias finitas
-    params -= lr * g
+    params = params - lr * g
     hist_noisy.append(cost_sep(params, shots=SHOTS))
     hist_exact.append(cost_sep(params))
 
@@ -691,8 +690,7 @@ plt.tight_layout(); plt.show()
 
 #### JAX: autodiff del circuito (gradiente EXACTO) vs diferencias finitas
 
-# el mismo ansatz_cnot, pero escrito con jnp: jax deriva automaticamente
-# incluso a traves de numeros complejos y productos de matrices unitarias
+# hacemos el mismo circuito, pero ahora tomamos la derivada con JAX
 ket00_j = jnp.array([1, 0, 0, 0], dtype=jnp.complex64)
 CNOT_j = jnp.array(CNOT, dtype=jnp.complex64)
 H_2q_j = jnp.array(H_2q, dtype=jnp.complex64)
@@ -712,10 +710,11 @@ def cost_cnot_jax(params):
 
 grad_cost_jax = jit(grad(cost_cnot_jax))
 
+
 params0_jax = jnp.array([jnp.pi, 0., jnp.pi, 0.])
-print("gradiente por diferencias finitas: ", grad_2q(ansatz_cnot, np.array([np.pi, 0., np.pi, 0.])))
+print("gradiente anterior (diferencias finias): ", grad_2q(ansatz_cnot, np.array([np.pi, 0., np.pi, 0.])))
 print("gradiente exacto (jax autodiff):   ", grad_cost_jax(params0_jax))
-# ambos deberian coincidir (salvo el error propio de la FD): jax deriva el circuito "a mano" automaticamente
+
 
 
 
@@ -728,14 +727,11 @@ def optimize_jax(cost_fn, params, lr=0.05, n_steps=200):
         hist.append(float(cost_fn(params)))
     return params, hist
 
-# para entrenar usamos un arranque apenas asimetrico: en [pi,0,pi,0] el gradiente exacto
-# es CERO en 3 de los 4 parametros (punto simetrico) y el descenso determinista se queda clavado ahi;
-# el ruido de los shots en la version FD lo saca de esa simetria por azar, por eso ahi sí converge
 params_init_jax = jnp.array([jnp.pi, 0.05, jnp.pi, -0.05])
 params_jax, hist_jax = optimize_jax(cost_cnot_jax, params_init_jax)
 print(f"costo final (jax, gradiente exacto): {hist_jax[-1]:.4f}  (energia exacta: {E_ground:.4f})")
 
-# comparamos contra la optimizacion anterior: diferencias finitas + shots (ruidosa) vs autodiff exacto
+# comparación
 plt.figure(figsize=(6, 3))
 plt.plot(hist_cnot, color="tomato", alpha=0.6, label=f"FD + {SHOTS} shots (ruidoso, como en HW real)")
 plt.plot(hist_jax, color="steelblue", linewidth=2, label="jax: gradiente exacto (autodiff, solo en simulacion)")
@@ -745,3 +741,87 @@ plt.title("gradiente exacto (jax) vs diferencias finitas con shots")
 plt.legend(fontsize=8)
 plt.tight_layout()
 plt.show()
+
+
+
+
+# ## 10. Modelo híbrido con JAX: clasificar el nivel de energía
+
+import jax
+import jax.numpy as jnp
+from jax import grad, jit
+import numpy as _np                 # numpy base para utilidades de plot
+
+niveles = _np.array(sorted(set(_np.round(np.linalg.eigvalsh(H_2q), 6))))
+print("niveles de energia:", niveles)
+
+# dataset: parametros al azar del ansatz con CNOT -> energia medida con shots -> etiqueta = nivel mas cercano
+rng = _np.random.default_rng(0)
+cost_cnot_noisy = lambda p: cost_2q(ansatz_cnot, p, shots=1000)
+
+N = 400
+params_dataset = rng.uniform(0, 2 * _np.pi, size=(N, 4))
+energias = _np.array([cost_cnot_noisy(p) for p in params_dataset])
+etiquetas = _np.argmin(_np.abs(energias[:, None] - niveles[None, :]), axis=1)
+
+print("distribucion de clases (0=ground, 1=1er excitado, 2=2do excitado):", _np.bincount(etiquetas))
+
+n_train = 320
+X_train, y_train = energias[:n_train], etiquetas[:n_train]
+X_test, y_test = energias[n_train:], etiquetas[n_train:]
+
+# la red: MLP chica, 1 entrada (energia) -> 3 clases (misma estructura que en modulo_3/clase2/codigo_scratch.py)
+def init(key, capas):
+    ps = []
+    for n_in, n_out in zip(capas[:-1], capas[1:]):
+        key, k = jax.random.split(key)
+        W = jax.random.normal(k, (n_out, n_in)) / jnp.sqrt(n_in)
+        b = jnp.zeros(n_out)
+        ps.append((W, b))
+    return ps
+
+def forward(ps, x):
+    h = x[:, None]
+    for W, b in ps[:-1]:
+        h = jnp.tanh(h @ W.T + b)
+    W, b = ps[-1]
+    return h @ W.T + b   # logits (N, 3)
+
+def loss(ps, x, y):
+    log_p = jax.nn.log_softmax(forward(ps, x))
+    return -jnp.mean(log_p[jnp.arange(len(y)), y])
+
+def accuracy(ps, x, y):
+    return float(jnp.mean(jnp.argmax(forward(ps, x), axis=1) == y))
+
+grad_loss = jit(grad(loss))
+
+def entrenar(ps, x, y, pasos, lr):
+    for _ in range(pasos):
+        g = grad_loss(ps, x, y)
+        ps = [(W - lr * gW, b - lr * gb) for (W, b), (gW, gb) in zip(ps, g)]
+    return ps
+
+key = jax.random.PRNGKey(0)
+ps0 = init(key, [1, 16, 3])
+ps_final = entrenar(ps0, jnp.array(X_train), jnp.array(y_train), pasos=2000, lr=0.1)
+
+print(f"accuracy train: {accuracy(ps_final, jnp.array(X_train), jnp.array(y_train)):.3f}")
+print(f"accuracy test:  {accuracy(ps_final, jnp.array(X_test), jnp.array(y_test)):.3f}")
+
+preds_test = _np.array(jnp.argmax(forward(ps_final, jnp.array(X_test)), axis=1))
+etiquetas_niveles = ["ground (-2)", "1er excitado (0)", "2do excitado (+2)"]
+colores = ["tab:blue", "tab:orange", "tab:green"]
+
+plt.figure(figsize=(7, 3))
+for c in range(3):
+    mask = y_test == c
+    plt.scatter(X_test[mask], y_test[mask], color=colores[c], alpha=0.5, label=f"clase real: {etiquetas_niveles[c]}")
+mal = preds_test != y_test
+plt.scatter(X_test[mal], preds_test[mal], marker="x", color="red", s=70, label="mal clasificado")
+for niv in niveles:
+    plt.axvline(niv, color="gray", linestyle=":", linewidth=1)
+plt.xlabel("energia estimada <H> (1000 shots)")
+plt.yticks([0, 1, 2], etiquetas_niveles)
+plt.legend(fontsize=7)
+plt.tight_layout(); plt.show()
