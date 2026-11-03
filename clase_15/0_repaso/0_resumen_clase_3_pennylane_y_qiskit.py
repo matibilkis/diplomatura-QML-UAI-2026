@@ -1,3 +1,5 @@
+# Notebook con explicaciones (Colab): https://colab.research.google.com/github/matibilkis/diplomatura-QML-UAI-2026/blob/master/clase_15/0_repaso/0_resumen_clase_3_pennylane_y_qiskit.ipynb
+
 import json
 import os
 import pathlib

@@ -1,3 +1,5 @@
+# Notebook con explicaciones (Colab): https://colab.research.google.com/github/matibilkis/diplomatura-QML-UAI-2026/blob/master/clase_15/1_maxcut_vqe_qaoa/1_maxcut_vqe_qaoa.ipynb
+
 import itertools
 
 import matplotlib.pyplot as plt
