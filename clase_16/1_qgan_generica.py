@@ -1,3 +1,4 @@
+# Colab: https://colab.research.google.com/github/matibilkis/diplomatura-QML-UAI-2026/blob/master/clase_16/1_qgan_generica.ipynb
 import os
 import pennylane as qml
 from pennylane import numpy as np
